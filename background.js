@@ -42,9 +42,10 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   } catch (_) {}
 
   // Check if word already exists
-  const stored = await chrome.storage.local.get(["words", "apiKeys", "apiKey"]);
+  const stored = await chrome.storage.local.get(["words", "apiKeys", "apiKey", "ollamaEnabled", "ollamaUrl", "ollamaModel"]);
   const storedWords = stored.words || [];
   const apiKeys = stored.apiKeys || (stored.apiKey ? [stored.apiKey] : []);
+  const ollama = stored.ollamaEnabled ? { url: stored.ollamaUrl || "http://localhost:11434", model: stored.ollamaModel || "glm-5:cloud" } : null;
 
   const existingIdx = storedWords.findIndex(
     (w) => w.word.toLowerCase() === word.toLowerCase()
@@ -72,24 +73,65 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   // Fetch AI meaning (only for new words or words without a meaning)
   if (isNew || !existingMeaning) {
-    const { meaning, error, keyHint, keyErrors } = await fetchMeaningWithFallback(word, context, apiKeys);
+    const { meaning, error, keyHint, keyErrors } = await fetchMeaningWithFallback(word, context, apiKeys, ollama);
     chrome.tabs.sendMessage(tab.id, { type: "meaningReady", word, meaning, error, keyHint, keyErrors });
   }
 });
 
-async function fetchMeaningWithFallback(word, context, apiKeys) {
+async function fetchMeaningWithFallback(word, context, apiKeys, ollama) {
   const keyErrors = [];
 
   for (const apiKey of apiKeys) {
     const { meaning, error } = await fetchMeaning(word, context, apiKey);
-    if (!error) return { meaning, error: null, keyHint: apiKey.slice(-6), keyErrors };
-    keyErrors.push({ keyHint: apiKey.slice(-6), error });
-    // Don't try more keys for content-policy blocks — result will be same
+    if (!error) return { meaning, error: null, keyHint: `Gemini ···${apiKey.slice(-6)}`, keyErrors };
+    keyErrors.push({ keyHint: `Gemini ···${apiKey.slice(-6)}`, error });
     if (error.startsWith("Blocked:")) break;
   }
 
-  const summary = keyErrors.map((e) => `···${e.keyHint}: ${e.error}`).join(" | ");
+  if (ollama) {
+    const { meaning, error } = await fetchMeaningOllama(word, context, ollama.url, ollama.model);
+    if (!error) return { meaning, error: null, keyHint: `Ollama (${ollama.model})`, keyErrors };
+    keyErrors.push({ keyHint: `Ollama (${ollama.model})`, error });
+  }
+
+  const summary = keyErrors.map((e) => `${e.keyHint}: ${e.error}`).join(" | ");
   return { meaning: "", error: summary, keyHint: null, keyErrors };
+}
+
+async function fetchMeaningOllama(word, context, baseUrl, model) {
+  const contextPart = context ? `\n\nContext from the page:\n"${context}"` : "";
+  const prompt = `You are a vocabulary assistant. Given the word or phrase below, determine its language (English or German), then provide a meaning following these rules:
+
+Word: "${word}"${contextPart}
+
+Rules:
+- If the word is ENGLISH → respond in Turkish (give Turkish translation + short explanation)
+- If the word is GERMAN → respond in English (give English translation + short explanation)
+- Include the detected language at the start in brackets: [English] or [German]
+- Keep it under 2 sentences
+- No extra commentary, just the answer`;
+
+  try {
+    const response = await fetch(`${baseUrl}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+      }),
+    });
+    if (!response.ok) {
+      const errBody = await response.text();
+      return { meaning: "", error: `HTTP ${response.status}: ${errBody.slice(0, 100)}` };
+    }
+    const data = await response.json();
+    const text = data?.message?.content?.trim();
+    if (!text) return { meaning: "", error: "Empty response from Ollama" };
+    return { meaning: text, error: null };
+  } catch (err) {
+    return { meaning: "", error: err.message };
+  }
 }
 
 async function fetchMeaning(word, context, apiKey) {
@@ -161,9 +203,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
   // Allow popup to re-trigger AI meaning fetch
   if (msg.type === "refetchMeaning") {
-    chrome.storage.local.get(["words", "apiKeys", "apiKey"], async (result) => {
+    chrome.storage.local.get(["words", "apiKeys", "apiKey", "ollamaEnabled", "ollamaUrl", "ollamaModel"], async (result) => {
       const words = result.words || [];
       const apiKeys = result.apiKeys || (result.apiKey ? [result.apiKey] : []);
+      const ollama = result.ollamaEnabled ? { url: result.ollamaUrl || "http://localhost:11434", model: result.ollamaModel || "glm-5:cloud" } : null;
       const idx = words.findIndex(
         (w) => w.word.toLowerCase() === msg.word.toLowerCase()
       );
@@ -171,7 +214,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       words[idx].loadingMeaning = true;
       words[idx].meaning = "";
       await chrome.storage.local.set({ words });
-      const { meaning, error } = await fetchMeaningWithFallback(msg.word, "", apiKeys);
+      const { meaning, error } = await fetchMeaningWithFallback(msg.word, "", apiKeys, ollama);
       const r2 = await chrome.storage.local.get(["words"]);
       const w2 = r2.words || [];
       const i2 = w2.findIndex((w) => w.word.toLowerCase() === msg.word.toLowerCase());

@@ -21,12 +21,33 @@
 
     <!-- Settings Panel -->
     <div id="settingsPanel" class="settings-panel" style="display:none">
+
       <div class="settings-title">Gemini API Keys</div>
       <ul id="apiKeyList"></ul>
       <div class="settings-row">
         <input type="password" id="apiKeyInput" placeholder="Add new key: AIza..." />
         <button id="addApiKey">Add</button>
       </div>
+
+      <div class="settings-divider"></div>
+
+      <div class="settings-title">
+        Ollama (local)
+        <label class="toggle">
+          <input type="checkbox" id="ollamaEnabled" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div id="ollamaFields" class="ollama-fields" style="display:none">
+        <div class="settings-row">
+          <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" />
+        </div>
+        <div class="settings-row">
+          <input type="text" id="ollamaModel" placeholder="Model (e.g. glm-5:cloud)" />
+          <button id="saveOllama">Save</button>
+        </div>
+      </div>
+
     </div>
 
     <!-- Add Word Form -->

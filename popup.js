@@ -14,6 +14,11 @@ const apiKeyInput = document.getElementById("apiKeyInput");
 const addApiKeyBtn = document.getElementById("addApiKey");
 const apiKeyList = document.getElementById("apiKeyList");
 const exportBtn = document.getElementById("exportBtn");
+const ollamaEnabledChk = document.getElementById("ollamaEnabled");
+const ollamaFields = document.getElementById("ollamaFields");
+const ollamaUrlInput = document.getElementById("ollamaUrl");
+const ollamaModelInput = document.getElementById("ollamaModel");
+const saveOllamaBtn = document.getElementById("saveOllama");
 
 let allWords = [];
 let refreshTimer = null;
@@ -52,12 +57,29 @@ settingsBtn.addEventListener("click", () => {
   const open = settingsPanel.style.display !== "none";
   settingsPanel.style.display = open ? "none" : "block";
   if (!open) {
-    chrome.storage.local.get(["apiKeys", "apiKey"], (r) => {
-      // migrate legacy single key
+    chrome.storage.local.get(["apiKeys", "apiKey", "ollamaEnabled", "ollamaUrl", "ollamaModel"], (r) => {
       const keys = r.apiKeys || (r.apiKey ? [r.apiKey] : []);
       renderApiKeys(keys);
+      ollamaEnabledChk.checked = !!r.ollamaEnabled;
+      ollamaFields.style.display = r.ollamaEnabled ? "block" : "none";
+      ollamaUrlInput.value = r.ollamaUrl || "http://localhost:11434";
+      ollamaModelInput.value = r.ollamaModel || "glm-5:cloud";
     });
   }
+});
+
+ollamaEnabledChk.addEventListener("change", () => {
+  ollamaFields.style.display = ollamaEnabledChk.checked ? "block" : "none";
+  chrome.storage.local.set({ ollamaEnabled: ollamaEnabledChk.checked });
+});
+
+saveOllamaBtn.addEventListener("click", () => {
+  const url = ollamaUrlInput.value.trim() || "http://localhost:11434";
+  const model = ollamaModelInput.value.trim() || "glm-5:cloud";
+  chrome.storage.local.set({ ollamaUrl: url, ollamaModel: model }, () => {
+    saveOllamaBtn.textContent = "Saved!";
+    setTimeout(() => (saveOllamaBtn.textContent = "Save"), 1500);
+  });
 });
 
 addApiKeyBtn.addEventListener("click", () => {
