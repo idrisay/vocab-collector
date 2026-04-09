@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vocab Collector</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="header">
+      <h1>Vocab Collector</h1>
+      <div class="header-actions">
+        <span id="wordCount" class="badge">0 words</span>
+        <button id="exportBtn" class="btn-icon btn-export" title="Export as CSV">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button id="settingsBtn" class="btn-icon btn-settings" title="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="settings-panel" style="display:none">
+      <div class="settings-title">Gemini API Keys</div>
+      <ul id="apiKeyList"></ul>
+      <div class="settings-row">
+        <input type="password" id="apiKeyInput" placeholder="Add new key: AIza..." />
+        <button id="addApiKey">Add</button>
+      </div>
+    </div>
+
+    <!-- Add Word Form -->
+    <div class="add-form">
+      <div class="form-row">
+        <input type="text" id="wordInput" placeholder="Word" />
+        <select id="langSelect">
+          <option value="EN">EN</option>
+          <option value="DE">DE</option>
+        </select>
+      </div>
+      <div class="meaning-row">
+        <input type="text" id="meaningInput" placeholder="Meaning (or leave blank for AI)" />
+        <button id="addBtn">Add</button>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search..." />
+      <select id="filterLang">
+        <option value="ALL">All</option>
+        <option value="EN">EN</option>
+        <option value="DE">DE</option>
+      </select>
+      <select id="filterStatus">
+        <option value="ALL">All</option>
+        <option value="review">To Review</option>
+        <option value="learned">Learned</option>
+      </select>
+    </div>
+
+    <!-- Word List -->
+    <ul id="wordList"></ul>
+
+    <div id="emptyState" class="empty-state" style="display:none">
+      No words yet. Select text on any page and right-click to add.
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
