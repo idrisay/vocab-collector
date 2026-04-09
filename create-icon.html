@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="128" height="128"></canvas>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+
+// Background
+ctx.fillStyle = '#7c6aff';
+ctx.roundRect(0, 0, 128, 128, 20);
+ctx.fill();
+
+// Book shape
+ctx.fillStyle = '#fff';
+ctx.beginPath();
+ctx.roundRect(24, 20, 80, 90, 6);
+ctx.fill();
+
+ctx.fillStyle = '#7c6aff';
+ctx.fillRect(59, 20, 4, 90);
+
+// Lines on pages
+ctx.fillStyle = '#c8b4ff';
+ctx.fillRect(30, 36, 24, 3);
+ctx.fillRect(30, 46, 24, 3);
+ctx.fillRect(30, 56, 24, 3);
+ctx.fillRect(30, 66, 18, 3);
+
+ctx.fillRect(68, 36, 24, 3);
+ctx.fillRect(68, 46, 24, 3);
+ctx.fillRect(68, 56, 24, 3);
+ctx.fillRect(68, 66, 18, 3);
+
+const url = c.toDataURL('image/png');
+const a = document.createElement('a');
+a.href = url;
+a.download = 'icon.png';
+a.textContent = 'Download icon.png';
+document.body.appendChild(a);
+</script>
+</body>
+</html>

@@ -44,7 +44,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   // Check if word already exists
   const stored = await chrome.storage.local.get(["words", "apiKeys", "apiKey"]);
   const storedWords = stored.words || [];
-  const apiKeys = stored.apiKeys || (stored.apiKey ? [stored.apiKey] : ["AIzaSyDvj1RV1AMUnmPQ7k1yUsBaa5gAzB8FfK4"]);
+  const apiKeys = stored.apiKeys || (stored.apiKey ? [stored.apiKey] : []);
 
   const existingIdx = storedWords.findIndex(
     (w) => w.word.toLowerCase() === word.toLowerCase()
@@ -163,7 +163,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "refetchMeaning") {
     chrome.storage.local.get(["words", "apiKeys", "apiKey"], async (result) => {
       const words = result.words || [];
-      const apiKeys = result.apiKeys || (result.apiKey ? [result.apiKey] : ["AIzaSyDvj1RV1AMUnmPQ7k1yUsBaa5gAzB8FfK4"]);
+      const apiKeys = result.apiKeys || (result.apiKey ? [result.apiKey] : []);
       const idx = words.findIndex(
         (w) => w.word.toLowerCase() === msg.word.toLowerCase()
       );
